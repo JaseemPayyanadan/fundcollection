@@ -15,7 +15,6 @@ export default function CreateCollection() {
     if (!collectionName.trim()) return;
 
     setLoading(true);
-    console.log('🚀 Creating collection...');
     
     try {
       const response = await fetch('/api/collections', {
@@ -36,11 +35,9 @@ export default function CreateCollection() {
       }
 
       const data = await response.json();
-      console.log('✅ Collection created successfully! ID:', data.id);
       alert(`✅ Collection created successfully!`);
       router.push(`/admin/${data.id}`);
     } catch (error: any) {
-      console.error('❌ Error creating collection:', error);
       alert('Failed to create collection: ' + error.message);
     } finally {
       setLoading(false);
