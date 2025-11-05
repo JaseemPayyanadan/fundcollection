@@ -1,4 +1,4 @@
-import { sql } from '@vercel/postgres';
+import { query } from '@/lib/postgres';
 import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -12,15 +12,16 @@ export async function POST(
     const { name, amount } = body;
     const contributorId = uuidv4();
 
-    await sql`
-      INSERT INTO contributors (collection_id, contributor_id, name, amount, paid_amount, payment_status, added_at)
-      VALUES (${params.id}, ${contributorId}, ${name}, ${amount}, 0, 'pending', CURRENT_TIMESTAMP)
-    `;
+    await query(
+      'INSERT INTO contributors (collection_id, contributor_id, name, amount, paid_amount, payment_status, added_at) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)',
+      [params.id, contributorId, name, amount, 0, 'pending']
+    );
 
     // Update collection updated_at
-    await sql`
-      UPDATE collections SET updated_at = CURRENT_TIMESTAMP WHERE id = ${params.id}
-    `;
+    await query(
+      'UPDATE collections SET updated_at = CURRENT_TIMESTAMP WHERE id = $1',
+      [params.id]
+    );
 
     return NextResponse.json({ success: true, id: contributorId });
   } catch (error: any) {
@@ -38,18 +39,16 @@ export async function PUT(
     const body = await request.json();
     const { contributorId, paidAmount, paymentStatus } = body;
 
-    await sql`
-      UPDATE contributors 
-      SET paid_amount = ${paidAmount}, 
-          payment_status = ${paymentStatus}
-      WHERE collection_id = ${params.id} 
-        AND contributor_id = ${contributorId}
-    `;
+    await query(
+      'UPDATE contributors SET paid_amount = $1, payment_status = $2 WHERE collection_id = $3 AND contributor_id = $4',
+      [paidAmount, paymentStatus, params.id, contributorId]
+    );
 
     // Update collection updated_at
-    await sql`
-      UPDATE collections SET updated_at = CURRENT_TIMESTAMP WHERE id = ${params.id}
-    `;
+    await query(
+      'UPDATE collections SET updated_at = CURRENT_TIMESTAMP WHERE id = $1',
+      [params.id]
+    );
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

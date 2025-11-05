@@ -1,21 +1,20 @@
-import { sql } from '@vercel/postgres';
+import { query } from '@/lib/postgres';
 import { NextResponse } from 'next/server';
 
 // GET all collections
 export async function GET() {
   try {
-    const { rows: collections } = await sql`
-      SELECT * FROM collections ORDER BY created_at DESC
-    `;
+    const { rows: collections } = await query(
+      'SELECT * FROM collections ORDER BY created_at DESC'
+    );
 
     // Get contributors for each collection
     const collectionsWithContributors = await Promise.all(
       collections.map(async (collection) => {
-        const { rows: contributors } = await sql`
-          SELECT * FROM contributors 
-          WHERE collection_id = ${collection.id}
-          ORDER BY added_at DESC
-        `;
+        const { rows: contributors } = await query(
+          'SELECT * FROM contributors WHERE collection_id = $1 ORDER BY added_at DESC',
+          [collection.id]
+        );
 
         return {
           id: collection.id.toString(),
@@ -49,11 +48,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, description, targetAmount } = body;
 
-    const { rows } = await sql`
-      INSERT INTO collections (name, description, target_amount, created_at, updated_at)
-      VALUES (${name}, ${description || ''}, ${targetAmount || 0}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-      RETURNING *
-    `;
+    const { rows } = await query(
+      'INSERT INTO collections (name, description, target_amount, created_at, updated_at) VALUES ($1, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING *',
+      [name, description || '', targetAmount || 0]
+    );
 
     const collection = rows[0];
 

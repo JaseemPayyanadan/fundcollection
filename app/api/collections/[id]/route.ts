@@ -1,4 +1,4 @@
-import { sql } from '@vercel/postgres';
+import { query } from '@/lib/postgres';
 import { NextResponse } from 'next/server';
 
 // GET single collection
@@ -7,9 +7,10 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { rows: collections } = await sql`
-      SELECT * FROM collections WHERE id = ${params.id}
-    `;
+    const { rows: collections } = await query(
+      'SELECT * FROM collections WHERE id = $1',
+      [params.id]
+    );
 
     if (collections.length === 0) {
       return NextResponse.json({ error: 'Collection not found' }, { status: 404 });
@@ -17,11 +18,10 @@ export async function GET(
 
     const collection = collections[0];
 
-    const { rows: contributors } = await sql`
-      SELECT * FROM contributors 
-      WHERE collection_id = ${params.id}
-      ORDER BY added_at DESC
-    `;
+    const { rows: contributors } = await query(
+      'SELECT * FROM contributors WHERE collection_id = $1 ORDER BY added_at DESC',
+      [params.id]
+    );
 
     return NextResponse.json({
       id: collection.id.toString(),
