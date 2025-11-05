@@ -92,7 +92,7 @@ npm run dev
 
 ### 3. 🌐 Browser Cache Issue
 
-**Problem**: Browser is caching old version without Firebase connection
+**Problem**: Browser is caching old version without database connection
 
 **Solution**:
 1. Hard refresh: `Cmd + Shift + R` (Mac) or `Ctrl + Shift + R` (Windows)
